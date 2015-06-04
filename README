@@ -1,0 +1,11 @@
+Randime
+
+A website for offering random anime suggestions. Right now this uses FastCGI
+with my Rapunzel library. The user loads the page, and the FastCGI program
+returns HTML describing a random anime from it's database.
+
+Right now there is just support for Funimation, but more scrapers will be added.
+
+I also plan to add WebSockets in the future, so that people with Javascript
+can get a nice AJAX experience; without breaking it for plain HTML users.
+
