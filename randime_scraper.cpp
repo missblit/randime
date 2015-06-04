@@ -9,6 +9,7 @@
 #include "gumbo_util.h"
 #include "randime_show.h"
 #include "randime_scraper.h"
+#include "rapunzel/util.h"
 
 show retrieve_funimation_show(GumboNode *item_cell) {
     show s;
