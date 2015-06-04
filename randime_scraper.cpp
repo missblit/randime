@@ -117,5 +117,6 @@ std::vector<show> funimation_scraper::get() {
 
 std::vector<show> crunchyroll_scraper::get() {
 	std::set<show> shows;
-        std::string page = "http://www.funimation.com/shows?offset=";
-	
+	return {};
+    //    std::string page = "http://www.funimation.com/shows?offset=";
+}

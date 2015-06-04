@@ -1,5 +1,12 @@
-scraper:
-	g++ -std=c++14 scraper_main.cpp gumbo_util.cpp randime_scraper.cpp -lcurl -lgumbo -g -Wall -Wextra 
-server:
-	g++ -std=c++14 server_main.cpp rapunzel/fcgi_connection_manager.cpp rapunzel/fcgi_request.cpp rapunzel/fcgi_connection.cpp \
-            -g -Wall -Wextra -lcurl -lboost_system -pthread
+CXXFLAGS = -std=c++14 -Wall -Wextra -pthread -g
+LDFLAGS = -lboost_system -lboost_coroutine -lstdc++ -lcurl -lgumbo -pthread
+.PHONY: rapunzel
+all: scraper_main server_main
+rapunzel/rapunzel.a: 
+	cd rapunzel && make
+server_main: rapunzel/rapunzel.a 
+scraper_main: randime_scraper.o gumbo_util.o
+scraper_main.o: randime_show.h randime_scraper.h
+server_main.o: randime_show.h
+gumbo_util.o: gumbo_util.h
+randime_scraper.o: randime_scraper.h randime_show.h
