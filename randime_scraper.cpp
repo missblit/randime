@@ -134,7 +134,7 @@ std::vector<show> crunchyroll_scraper::get() {
 		container_node = gumbo_find_first(output->root, content_s);
 	}
 	
-	std::string regex_str = R"str(\("#media_group_([[:digit:]]+)"\)\.data\('bubble_data', \{"name":"([^"]*)","description":"([^"]*)")str";
+	std::string regex_str = R"str(\("#media_group_([[:digit:]]+)"\)\.data\('bubble_data', \{"name":"([^"]*)","description":"(([^"]|\\")*)")str";
 	std::regex regex(regex_str, std::regex_constants::extended);
 
 	std::sregex_iterator it(html.begin(), html.end(), regex);

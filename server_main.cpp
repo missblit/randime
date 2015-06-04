@@ -102,35 +102,52 @@ std::vector<std::string> fairy_quotes() {
 }
 
 int main() {
-    //random seeding like this sucks, but is OK
-    //because the randime fairy is above such base problems
-    //as crypotgraphic or numerical properties
     std::random_device rd;
     std::mt19937 rng(rd());
     
     auto quotes = fairy_quotes(); 
-    std::ifstream funi_db("funimation.dat");
+    std::ifstream funi_db("/var/www/cgi-bin/funimation.dat");
     auto funi_shows = load_shows(funi_db);
+    std::ifstream cr_db("/var/www/cgi-bin/crunchyroll.dat");
+    auto cr_shows = load_shows(cr_db);
+	if(funi_shows.empty()|| cr_shows.empty())
+		throw std::runtime_error("Could not load show files");
     
     fcgi::connection_manager fcgi;
     
     std::uniform_int_distribution<> dist(0, funi_shows.size()-1);
     std::uniform_int_distribution<> q_dist(0, quotes.size()-1);
     while(true) {
-        show s = funi_shows[dist(rng)];
         fcgi::request r = fcgi.get_request();
+        auto qs = decode_querystring(r.parameter("QUERY_STRING"));
+
+		//decide which sources to consider 
+		bool funi = qs["funimation"] == "true";
+		bool crunchy = qs["crunchyroll"] == "true";
+		std::vector<std::vector<show>*> sources;
+		int count = funi + crunchy;
+		if(funi || !count)
+			sources.push_back(&funi_shows);
+		if(crunchy || !count)
+			sources.push_back(&cr_shows);
+
+		//randomly select the show
+		std::uniform_int_distribution<> source_dist(0,sources.size()-1);
+		std::vector<show> &source = *sources[source_dist(rng)];
+		std::uniform_int_distribution<> show_dist(0,source.size()-1);
+		show &s = source[show_dist(rng)];
+		
+		//output the chosen show
         r << "Content-type: text/html; charset=UTF-8\r\n\r\n"
              "<!DOCTYPE html>\n";
-        //todo: encode title / etc. for HTML
-        //right now there is XSS potential
-        //but it's not a huge issue for ranime
         r << "<title>" << s.title << "</title>\n";
         r << "<p>The gods of Randime have spoken \\o_o/<br>\n"
              "   You must watch:<br>\n";
-        r << "<h1><a href=\"" << s.url << "\">" << s.title << "</a></h1>\n";
+        r << "<h1><a style=\"text-decoration:none;\" href=\""
+		  << s.url << "\">" << s.title << "</a></h1>\n";
         r << "<p>Randime Fairy says:<br>\n"
              "<blockquote>" << s.description << "</blockquote></p>\n";
-
+		//output a saying from the randime fairy too
         r << "<p><small>Randime fairy also says: " << quotes[q_dist(rng)]
           << "</small></p>\n";
     }
