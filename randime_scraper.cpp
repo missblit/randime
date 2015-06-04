@@ -5,6 +5,7 @@
 #include <thread>
 #include <chrono>
 #include <set>
+#include <regex>
 #include "gumbo_util.h"
 #include "randime_show.h"
 #include "randime_scraper.h"
@@ -104,7 +105,7 @@ std::vector<show> retrieve_funimation_shows() {
         std::cout << "Retrieved " << cells.size() << " shows...\n";
         done = cells.size() < 20;
         if(!done)
-            std::this_thread::sleep_for(std::chrono::seconds(10));
+            std::this_thread::sleep_for(std::chrono::seconds(5));
 
         offset += cells.size();
     }
@@ -117,6 +118,62 @@ std::vector<show> funimation_scraper::get() {
 
 std::vector<show> crunchyroll_scraper::get() {
 	std::set<show> shows;
-	return {};
-    //    std::string page = "http://www.funimation.com/shows?offset=";
+	std::string page = "http://www.crunchyroll.com/"
+	                   "videos/anime/alpha?group=all";
+	std::string html = download_url(page);
+	GumboOutput *output = gumbo_parse(html.c_str());
+
+	//first find <ul class="container items-row">
+	GumboNode *container_node;
+	{
+		gumbo_multi_selector content_s;
+		content_s.push(std::make_unique<gumbotag_selector>(GUMBO_TAG_DIV));
+		content_s.push(std::make_unique<gumboattribute_selector>(
+			"class", "videos-column-container"
+		));
+		container_node = gumbo_find_first(output->root, content_s);
+	}
+	
+	std::string regex_str = R"str(\("#media_group_([[:digit:]]+)"\)\.data\('bubble_data', \{"name":"([^"]*)","description":"([^"]*)")str";
+	std::regex regex(regex_str, std::regex_constants::extended);
+
+	std::sregex_iterator it(html.begin(), html.end(), regex);
+	for(; it != std::sregex_iterator(); it++) {
+		std::string media_group = (*it)[1];
+		std::string name        = (*it)[2];
+		std::string description = (*it)[3];
+		
+		/* Find the URL */
+		gumbo_multi_selector group_s;
+		group_s.push(std::make_unique<gumbotag_selector>(GUMBO_TAG_LI));
+		group_s.push(std::make_unique<gumboattribute_selector>(
+			"id", (std::string("media_group_") + media_group)
+		));
+		GumboNode *group_node = gumbo_find_first(container_node, group_s);
+		
+		gumbo_multi_selector show_s;
+		show_s.push(std::make_unique<gumbotag_selector>(GUMBO_TAG_A));
+		show_s.push(std::make_unique<gumboattribute_selector>(
+			"token", "shows-portraits"
+		));
+		GumboNode *show_node = gumbo_find_first(group_node, show_s);
+		
+		//Can't do anything without the show's URL
+		if(!show_node)
+			continue;
+		
+		std::string url =   std::string("http://www.crunchyroll.com")
+		                  + gumbo_value(show_node, "href");
+						  
+		show s;
+		s.title = name;
+		s.url = url;
+		s.description = description;
+		
+		/* todo: it's too hard to detect this so make it optional in the struct
+		 */
+		s.subscriber_exclusive = false;
+		shows.insert(s);
+	}
+    return std::vector<show>(std::begin(shows), std::end(shows));
 }

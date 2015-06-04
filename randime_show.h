@@ -27,6 +27,17 @@ struct show {
         is.read(reinterpret_cast<char*>(&exclusive), sizeof exclusive);
         return is;
     }
+    
+    std::ostream &save(std::ostream &os) {
+		for(const std::string &str : {title, url, description}) {
+            uint32_t len = str.size();
+            os.write(reinterpret_cast<const char*>(&len), sizeof len);
+            os.write(str.c_str(), len);
+        }
+        uint8_t exclusive = subscriber_exclusive;
+        os.write(reinterpret_cast<const char*>(&exclusive), sizeof exclusive);
+		return os;
+	}
 };
 
 inline std::vector<show> load_shows(std::istream &is) {

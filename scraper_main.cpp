@@ -18,15 +18,18 @@
 #include "randime_scraper.h"
 
 int main() {
-    auto shows = funimation_scraper().get();
-    std::ofstream file("funimation.dat", std::ios::trunc | std::ios::binary);
-    for(show s : shows) {
-        for(const std::string &str : {s.title, s.url, s.description}) {
-            uint32_t len = str.size();
-            file.write(reinterpret_cast<const char*>(&len), sizeof len);
-            file.write(str.c_str(), len);
-        }
-        uint8_t exclusive = s.subscriber_exclusive;
-        file.write(reinterpret_cast<const char*>(&exclusive), sizeof exclusive);
-    }
+    auto crunchy_shows = crunchyroll_scraper().get();
+	auto funi_shows  = funimation_scraper().get();
+    std::ofstream funi_f("funimation.dat", std::ios::trunc | std::ios::binary);
+    std::ofstream cr_f("crunchyroll.dat", std::ios::trunc | std::ios::binary);
+	if(!funi_shows.empty())
+		for(show s : funi_shows)
+			s.save(funi_f);
+	else
+		std::cout << "Could not scrape funimation shows\n";
+	if(!crunchy_shows.empty())
+		for(show s : crunchy_shows)
+			s.save(cr_f);
+	else
+		std::cout << "Could not scrape crunchyroll shows\n";
 }
