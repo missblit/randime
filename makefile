@@ -1,6 +1,6 @@
 CXXFLAGS = -std=c++14 -Wall -Wextra -pthread -g
 LDFLAGS = -lboost_system -lboost_coroutine -lstdc++ -lcurl -lgumbo -pthread
-.PHONY: rapunzel
+.PHONY: rapunzel clean
 all: scraper_main server_main
 rapunzel/rapunzel.a: 
 	cd rapunzel && make
@@ -10,3 +10,6 @@ scraper_main.o: randime_show.h randime_scraper.h
 server_main.o: randime_show.h
 gumbo_util.o: gumbo_util.h
 randime_scraper.o: randime_scraper.h randime_show.h
+clean:
+	rm -f *.o
+	rm -f server_main scraper_main
