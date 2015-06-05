@@ -19,14 +19,14 @@
 
 int main() {
     auto crunchy_shows = crunchyroll_scraper().get();
-	//auto funi_shows  = funimation_scraper().get();
-    //std::ofstream funi_f("funimation.dat", std::ios::trunc | std::ios::binary);
+    auto funi_shows  = funimation_scraper().get();
+    std::ofstream funi_f("funimation.dat", std::ios::trunc | std::ios::binary);
     std::ofstream cr_f("crunchyroll.dat", std::ios::trunc | std::ios::binary);
-	//if(!funi_shows.empty())
-	//	for(show s : funi_shows)
-	//		s.save(funi_f);
-	//else
-	//	std::cout << "Could not scrape funimation shows\n";
+	if(!funi_shows.empty())
+		for(show s : funi_shows)
+			s.save(funi_f);
+	else
+		std::cout << "Could not scrape funimation shows\n";
 	if(!crunchy_shows.empty())
 		for(show s : crunchy_shows)
 			s.save(cr_f);
