@@ -102,6 +102,10 @@ std::vector<std::string> fairy_quotes() {
 }
 
 int main() {
+	std::ofstream ofs("/tmp/rapunzel-output");
+	std::cout.rdbuf(ofs.rdbuf());
+	std::cout << "THIS IS A TEST" << std::endl;
+	
     std::random_device rd;
     std::mt19937 rng(rd());
     
@@ -144,7 +148,7 @@ int main() {
         r << "<p>The gods of Randime have spoken \\o_o/<br>\n"
              "   You must watch:<br>\n";
         r << "<h1><a style=\"text-decoration:none;\" href=\""
-		  << s.url << "\">" << s.title << "</a></h1>\n";
+		  << s.url << "\">" << s.title << "</a></h1></p>\n";
         r << "<p>Randime Fairy says:<br>\n"
              "<blockquote>" << s.description << "</blockquote></p>\n";
 		//output a saying from the randime fairy too
