@@ -4,12 +4,21 @@
 #include <string>
 #include <vector>
 #include <stdexcept>
+/** show record for keeping track of an anime show and it's URL and stuff */
 struct show {
+	/** The title of the show */
     std::string title;
+	/** The full URL of the show */
     std::string url;
+	/** The scraped description of the show */
     std::string description;
+	/** Whether or not the show is a subscriber exclusive
+	 *  (but this needs more work)
+	 */
     bool subscriber_exclusive;
-    
+	
+    /** Load show from binary input stream
+	 */
     std::istream &load(std::istream &is) {
         title.clear();
         url.clear();
@@ -28,6 +37,7 @@ struct show {
         return is;
     }
     
+    /** Write show to binary output stream */
     std::ostream &save(std::ostream &os) {
 		for(const std::string &str : {title, url, description}) {
             uint32_t len = str.size();
@@ -40,6 +50,7 @@ struct show {
 	}
 };
 
+/** Load a collection of shows from binary input stream */
 inline std::vector<show> load_shows(std::istream &is) {
     std::vector<show> shows;
     show s;
@@ -48,6 +59,7 @@ inline std::vector<show> load_shows(std::istream &is) {
     return shows;
 }
 
+/** Comparator for shows (so they can be put in a set) */
 inline bool operator<(const show &a, const show &b) {
     if(a.title       != b.title)       return a.title       < b.title;
     if(a.url         != b.url)         return a.url         < b.url;

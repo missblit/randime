@@ -3,6 +3,10 @@
 #include "rapunzel/fcgi_connection_manager.h"
 #include "randime_show.h"
 
+/**
+ * Quotes from the randime fairy 
+ * @todo This should be loaded from disk
+ */
 std::vector<std::string> fairy_quotes() {
     return {"Be sure to eat your cabbages.",
             "An OVA in the hand is worth two unreleased.",
@@ -102,30 +106,29 @@ std::vector<std::string> fairy_quotes() {
 }
 
 int main() {
-	std::ofstream ofs("/tmp/rapunzel-output");
-	std::cout.rdbuf(ofs.rdbuf());
-	std::cout << "THIS IS A TEST" << std::endl;
-	
+	/* initialize the RNG */
     std::random_device rd;
     std::mt19937 rng(rd());
     
     auto quotes = fairy_quotes(); 
+    std::uniform_int_distribution<> q_dist(0, quotes.size()-1); 
+	
+	/* Load the show information */
     std::ifstream funi_db("/var/www/cgi-bin/funimation.dat");
     auto funi_shows = load_shows(funi_db);
     std::ifstream cr_db("/var/www/cgi-bin/crunchyroll.dat");
     auto cr_shows = load_shows(cr_db);
 	if(funi_shows.empty()|| cr_shows.empty())
 		throw std::runtime_error("Could not load show files");
-    
-    fcgi::connection_manager fcgi;
-    
-    std::uniform_int_distribution<> dist(0, funi_shows.size()-1);
-    std::uniform_int_distribution<> q_dist(0, quotes.size()-1);
-    while(true) {
-        fcgi::request r = fcgi.get_request();
-        auto qs = decode_querystring(r.parameter("QUERY_STRING"));
 
-		//decide which sources to consider 
+	/* start the FastCGI backend */
+    fcgi::connection_manager fcgi;
+    while(true) {
+		/* get an FCGI request */
+        fcgi::request r = fcgi.get_request();
+		/* get the query string key -> values */
+        auto qs = decode_querystring(r.parameter("QUERY_STRING"));
+		/* decide which sources to consider */ 
 		bool funi = qs["funimation"] == "true";
 		bool crunchy = qs["crunchyroll"] == "true";
 		std::vector<std::vector<show>*> sources;
@@ -135,13 +138,13 @@ int main() {
 		if(crunchy || !count)
 			sources.push_back(&cr_shows);
 
-		//randomly select the show
+		/* randomly select a show */
 		std::uniform_int_distribution<> source_dist(0,sources.size()-1);
 		std::vector<show> &source = *sources[source_dist(rng)];
 		std::uniform_int_distribution<> show_dist(0,source.size()-1);
 		show &s = source[show_dist(rng)];
 		
-		//output the chosen show
+		/* output information about the show */
         r << "Content-type: text/html; charset=UTF-8\r\n\r\n"
              "<!DOCTYPE html>\n";
         r << "<title>" << s.title << "</title>\n";
@@ -149,7 +152,7 @@ int main() {
              "   You must watch:<br>\n";
         r << "<h1><a style=\"text-decoration:none;\" href=\""
 		  << s.url << "\">" << s.title << "</a></h1></p>\n";
-        r << "<p>Randime Fairy says:<br>\n"
+        r << "<p>Randime Fairy says the website's description is:<br>\n"
              "<blockquote>" << s.description << "</blockquote></p>\n";
 		//output a saying from the randime fairy too
         r << "<p><small>Randime fairy also says: " << quotes[q_dist(rng)]

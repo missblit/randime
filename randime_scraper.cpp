@@ -11,6 +11,7 @@
 #include "randime_scraper.h"
 #include "rapunzel/util.h"
 
+/** retrieve a particular funimation show from a li item-cell */
 show retrieve_funimation_show(GumboNode *item_cell) {
     show s;
     //Find the URL
@@ -59,7 +60,9 @@ show retrieve_funimation_show(GumboNode *item_cell) {
     }
     return s;
 }
-std::vector<show> retrieve_funimation_shows() {
+
+/** retrieve all funimation shows by scraping the website */
+std::vector<show> funimation_scraper::get() {
     bool done = false;
     int offset = 0;
     std::set<show> shows; //needs to be set in-case of duplicates
@@ -113,10 +116,7 @@ std::vector<show> retrieve_funimation_shows() {
     return std::vector<show>(std::begin(shows), std::end(shows));
 }
 
-std::vector<show> funimation_scraper::get() {
-    return retrieve_funimation_shows();
-}
-
+/** retrieve all crunchyroll shows by scraping the website */
 std::vector<show> crunchyroll_scraper::get() {
 	std::set<show> shows;
 	std::string page = "http://www.crunchyroll.com/"
@@ -135,6 +135,9 @@ std::vector<show> crunchyroll_scraper::get() {
 		container_node = gumbo_find_first(output->root, content_s);
 	}
 	
+	/* part of the show details are tucked away in some javascript
+	 * I don't want to bring in a javascript parser at this point
+	 * so just match them with regular expressions */ 
 	std::string regex_str = R"str(\("#media_group_([[:digit:]]+)"\)\.data\('bubble_data', \{"name":"([^"]*)","description":"(([^"]|\\")*)")str";
 	std::regex regex(regex_str, std::regex_constants::extended);
 

@@ -3,8 +3,10 @@
 
 #include "randime_show.h"
 
+/** interface for randime website scrapers */
 class scraper {
 public:
+	/** return a vector of shows */
     virtual std::vector<show> get() = 0;
 };
 

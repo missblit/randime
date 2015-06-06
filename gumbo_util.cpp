@@ -9,6 +9,7 @@
 #include <curl/curl.h>
 #include "gumbo_util.h"
 
+/* Curl write callback used by download_url */
 size_t curl_write_cb(void *ptr, size_t size, size_t nmemb, void *userdata) {
     std::string &out = *static_cast<std::string*>(userdata);
     const char *bytes = static_cast<const char *>(ptr);

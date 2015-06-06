@@ -18,8 +18,10 @@
 #include "randime_scraper.h"
 
 int main() {
+	/* scrape the pages */
     auto crunchy_shows = crunchyroll_scraper().get();
     auto funi_shows  = funimation_scraper().get();
+	/* output the show information */
     std::ofstream funi_f("funimation.dat", std::ios::trunc | std::ios::binary);
     std::ofstream cr_f("crunchyroll.dat", std::ios::trunc | std::ios::binary);
 	if(!funi_shows.empty())
